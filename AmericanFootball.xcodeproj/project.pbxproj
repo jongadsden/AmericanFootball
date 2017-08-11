@@ -8,20 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		D31428911F1C9D6000194CD1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31428901F1C9D6000194CD1 /* AppDelegate.swift */; };
-		D31428931F1C9D6000194CD1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31428921F1C9D6000194CD1 /* ViewController.swift */; };
+		D31428931F1C9D6000194CD1 /* mainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D31428921F1C9D6000194CD1 /* mainViewController.swift */; };
 		D31428961F1C9D6000194CD1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D31428941F1C9D6000194CD1 /* Main.storyboard */; };
 		D31428981F1C9D6000194CD1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D31428971F1C9D6000194CD1 /* Assets.xcassets */; };
 		D314289B1F1C9D6000194CD1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D31428991F1C9D6000194CD1 /* LaunchScreen.storyboard */; };
+		D397D00F1F3DC066001C5A0E /* mainMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D397D00E1F3DC066001C5A0E /* mainMenuViewController.swift */; };
+		D397D0111F3DC07B001C5A0E /* optionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D397D0101F3DC07B001C5A0E /* optionsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		D314288D1F1C9D6000194CD1 /* AmericanFootball.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AmericanFootball.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D31428901F1C9D6000194CD1 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		D31428921F1C9D6000194CD1 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		D31428921F1C9D6000194CD1 /* mainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = mainViewController.swift; sourceTree = "<group>"; };
 		D31428951F1C9D6000194CD1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		D31428971F1C9D6000194CD1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D314289A1F1C9D6000194CD1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D314289C1F1C9D6000194CD1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D397D00E1F3DC066001C5A0E /* mainMenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = mainMenuViewController.swift; sourceTree = "<group>"; };
+		D397D0101F3DC07B001C5A0E /* optionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = optionsViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,8 +59,10 @@
 			isa = PBXGroup;
 			children = (
 				D31428901F1C9D6000194CD1 /* AppDelegate.swift */,
-				D31428921F1C9D6000194CD1 /* ViewController.swift */,
+				D31428921F1C9D6000194CD1 /* mainViewController.swift */,
 				D31428941F1C9D6000194CD1 /* Main.storyboard */,
+				D397D00E1F3DC066001C5A0E /* mainMenuViewController.swift */,
+				D397D0101F3DC07B001C5A0E /* optionsViewController.swift */,
 				D31428971F1C9D6000194CD1 /* Assets.xcassets */,
 				D31428991F1C9D6000194CD1 /* LaunchScreen.storyboard */,
 				D314289C1F1C9D6000194CD1 /* Info.plist */,
@@ -137,7 +143,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D31428931F1C9D6000194CD1 /* ViewController.swift in Sources */,
+				D31428931F1C9D6000194CD1 /* mainViewController.swift in Sources */,
+				D397D0111F3DC07B001C5A0E /* optionsViewController.swift in Sources */,
+				D397D00F1F3DC066001C5A0E /* mainMenuViewController.swift in Sources */,
 				D31428911F1C9D6000194CD1 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -304,6 +312,7 @@
 				D31428A11F1C9D6000194CD1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
