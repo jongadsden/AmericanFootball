@@ -15,7 +15,6 @@ var currentQuarter = 1
 var timeRemaining = "15:00"
 var currentDown = 1
 var yardsToGo = 10
-var ballHalf = 1
 var ballOn = 25
 var playTime = 45
 var yardsGained = 0
@@ -39,6 +38,16 @@ class MainViewController: UIViewController {
     @IBOutlet weak var ballHalfLabel: UILabel!
     @IBOutlet weak var ballOnLabel: UILabel!
     @IBOutlet weak var playTimeLabel: UILabel!
+    @IBOutlet weak var awayTeamNameLabel: UILabel!
+    @IBOutlet weak var homeTeamNameLabel: UILabel!
+    @IBOutlet weak var resultLabel: UILabel!
+    
+    var homeTeamCity: String!
+    var homeTeamName: String!
+    var awayTeamCity: String!
+    var awayTeamName: String!
+    var offencePlay: Int!
+    var defencePlay: Int!
     
     enum PlayType: Int {
         case pass = 0, run, kick
@@ -58,9 +67,10 @@ class MainViewController: UIViewController {
         timeRemaining = "15:00"
         currentDown = 1
         yardsToGo = 10
-        ballHalf = 1
         ballOn = 25
         playTime = 45
+        homeTeamNameLabel.text = homeTeamCity + " " + homeTeamName
+        awayTeamNameLabel.text = awayTeamCity + " " + awayTeamName
     }
 
     override func didReceiveMemoryWarning() {
@@ -69,16 +79,47 @@ class MainViewController: UIViewController {
     }
     
     @IBAction func performPlay(_ sender: UIButton) {
-       print("before score \(teamInPossession)")
-        switch (PlayType(rawValue: sender.tag)!) {
-        case .run:
-            yardsGained = 2
-        case .pass:
-            yardsGained = 6
-        case .kick:
-            score(ScoreType: "fieldGoal")
+        // set result text to blank
+        resultLabel.text = ""
+        // Assume that home team is human team for now
+        if teamInPossession == 1 {
+            // Human is offence
+            switch (PlayType(rawValue: sender.tag)!) {
+            case .run:
+                offencePlay = 1
+            case .pass:
+                offencePlay = 2
+            case .kick:
+                offencePlay = 3
+            }
+        } else {
+            // Human is defence
+            switch (PlayType(rawValue: sender.tag)!) {
+            case .run:
+                defencePlay = 1
+            case .pass:
+                defencePlay = 2
+            case .kick:
+                defencePlay = 3
+            }
         }
-        playCompletion()
+        
+        // Need to select opposition play
+        selectComputerPlay()
+        
+        // Execute the play based on the offensive selection
+        switch offencePlay {
+        case 1:
+            executeRun()
+            playCompletion()
+        case 2:
+            executePass()
+            playCompletion()
+        case 3:
+            executeKick()
+        default:
+            executeRun()
+        }
         refreshScoreboardAfterPlay()
     }
     
@@ -87,14 +128,118 @@ class MainViewController: UIViewController {
         awayScoreLabel.text = "\(awayScore)"
         downLabel.text = "\(currentDown)"
         toGoLabel.text = "\(yardsToGo)"
-        if ballHalf == 1 {
-            ballHalfLabel.text = "Home Team's"
+
+        //calculate which half the ball is on
+        if ballOn > 50 {
+            let displayYards = 100 - ballOn
+            ballOnLabel.text = "\(displayYards)"
+            if teamInPossession == 1 {
+                ballHalfLabel.text = awayTeamName
+            } else {
+                ballHalfLabel.text = homeTeamName
+            }
         } else {
-            ballHalfLabel.text = "Away Team's"
+            ballOnLabel.text = "\(ballOn)"
+            if teamInPossession == 1 {
+                ballHalfLabel.text = homeTeamName
+            } else {
+                ballHalfLabel.text = awayTeamName
+            }
         }
-        ballOnLabel.text = "\(ballOn)"
+        // Reset the play clock
         playTimeLabel.text = "45"
     }
+    
+    func selectComputerPlay() {
+        if teamInPossession == 1 {
+        // Computer is defending
+            if currentDown == 4 {
+                defencePlay = 3
+            } else {
+                // just randomise defence play
+                defencePlay = Int(arc4random_uniform(2)+1)
+            }
+        } else {
+            // Computer is attacking
+            if currentDown == 4 {
+                offencePlay = 3
+            } else {
+                // just randomise offence play
+                offencePlay = Int(arc4random_uniform(2)+1)
+            }
+        }
+    }
+    
+    func executeRun() {
+        // for now a random gain up to 10 yards
+        // defending has no effect
+        yardsGained = Int(arc4random_uniform(11))
+        resultLabel.text = "\(yardsGained) yards gained"
+        resultLabel.textColor = UIColor.black
+        // need a fumble here
+        // need out of bounds
+    }
+    
+    func executePass() {
+        // need interceptions
+        // need catch distance then after catch distance
+        // out of bounds needed
+        // do pass completion first - for now 75% success
+        // defending has no effect
+        let passCompletion = Int(arc4random_uniform(100))
+        if passCompletion > 75 {
+            yardsGained = 0
+            resultLabel.text = "Pass Incomplete"
+            resultLabel.textColor = UIColor.black
+        } else {
+            // for now a random gain up to 15 yards
+            yardsGained = Int(arc4random_uniform(16))
+            resultLabel.text = " Pass Complete - \(yardsGained) yards gained"
+            resultLabel.textColor = UIColor.black
+        }
+    }
+    
+    func executeKick() {
+        // Lets see if it is going to be blocked
+        let blocked = blockKick()
+        // Lets see how long it is going be (up to 45 yards)
+        let kickLength = Int(arc4random_uniform(45))
+        let distanceToKick = 100 - ballOn
+        
+        // Need some logic around being wide here
+
+        // Work out if it was good or not
+        if blocked == false && kickLength > distanceToKick {
+            score(ScoreType: "fieldGoal")
+            resultLabel.text = "Field Goal Was Good!!!"
+            resultLabel.textColor = UIColor.red
+            // this is a fudge - need to sort out later
+            ballOn = 75
+        } else {
+            if blocked == true {
+                resultLabel.text = "The kick was blocked!!"
+            } else {
+                resultLabel.text = "The kick was short"
+            }
+        }
+        // Sort all the impacts of the kick
+        yardsGained = 0
+        currentDown = 1
+        switchPossession()
+        yardsToGo = 10
+        ballOn = 100 - ballOn
+    }
+    
+    func blockKick() -> Bool {
+        if defencePlay != 3 {
+            return false
+        }
+        // Use 2% blocking factor
+        if Int(arc4random_uniform(50)) == 0 {
+            return true
+        }
+        return false
+     }
     
     func score(ScoreType: String) {
         var score = 0
@@ -128,8 +273,19 @@ class MainViewController: UIViewController {
 
         if ballOn > 100 {
             score(ScoreType: "touchdown")
+            resultLabel.text = "TOUCHDOWN!!!!"
+            resultLabel.textColor = UIColor.blue
             // this is wrong and needs changing
+            ballOn = 25
             switchPossession()
+        }
+        
+        if ballOn < 0 {
+            score(ScoreType: "safety")
+            resultLabel.text = "Tackled in the endzone for a Safety"
+            resultLabel.textColor = UIColor.blue
+            // this is wrong and needs changing
+            ballOn = 25
         }
         
         if yardsToGo < 1 {
@@ -148,6 +304,7 @@ class MainViewController: UIViewController {
         if currentDown >= 5 {
             currentDown = 1
             yardsToGo = 10
+            yardsToGo = 100 - ballOn
             switchPossession()
         }
     }

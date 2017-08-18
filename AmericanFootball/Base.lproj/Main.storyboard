@@ -78,24 +78,56 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rDF-P5-e72">
-                                <rect key="frame" x="139" y="145" width="96" height="30"/>
+                                <rect key="frame" x="139" y="176" width="96" height="30"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Start Game"/>
                                 <connections>
-                                    <segue destination="Z30-TW-tUj" kind="show" id="KcD-9u-b9A"/>
+                                    <segue destination="Z30-TW-tUj" kind="show" identifier="newGame" id="KcD-9u-b9A"/>
                                 </connections>
                             </button>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Pittsburgh" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="7bz-vH-XWt" userLabel="Home Team Town">
+                                <rect key="frame" x="79" y="54" width="97" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Steelers" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="gH0-4F-mgP" userLabel="Home Team Name">
+                                <rect key="frame" x="201" y="54" width="97" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Baltimore" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4o5-T3-flG" userLabel="Away Team Town">
+                                <rect key="frame" x="79" y="99" width="97" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Ravens" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="s5D-Vn-i8h" userLabel="Away Team Name">
+                                <rect key="frame" x="201" y="99" width="97" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <connections>
+                        <outlet property="awayTeamName" destination="s5D-Vn-i8h" id="iVD-o1-bTP"/>
+                        <outlet property="awayTeamTown" destination="4o5-T3-flG" id="JfR-27-l9E"/>
                         <outlet property="exitButton" destination="SCe-l2-tpY" id="MUi-li-JSR"/>
+                        <outlet property="homeTeamName" destination="gH0-4F-mgP" id="Mbe-4H-xap"/>
+                        <outlet property="homeTeamTown" destination="7bz-vH-XWt" id="8Xt-VG-7tN"/>
                         <outlet property="startGameButton" destination="rDF-P5-e72" id="Pa6-9m-1sz"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="jnk-1W-JhO" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1188" y="-443"/>
+            <point key="canvasLocation" x="1281" y="-423"/>
         </scene>
         <!--mainViewController-->
         <scene sceneID="raT-G2-c43">
@@ -298,13 +330,20 @@
                                                 <rect key="frame" x="202" y="0.0" width="101" height="113.5"/>
                                                 <state key="normal" title="Quit"/>
                                                 <connections>
-                                                    <segue destination="BYZ-38-t0r" kind="show" id="PB1-4i-zpP"/>
+                                                    <segue destination="BYZ-38-t0r" kind="show" identifier="newGame" id="PB1-4i-zpP"/>
                                                 </connections>
                                             </button>
                                         </subviews>
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Play Result Display" textAlignment="center" lineBreakMode="wordWrap" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YbW-mm-jOF">
+                                <rect key="frame" x="43" y="310" width="288" height="68"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.0" green="1" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
@@ -321,17 +360,20 @@
                     <connections>
                         <outlet property="awayPossession" destination="8C8-Qf-pHN" id="MOo-LH-sFu"/>
                         <outlet property="awayScoreLabel" destination="ZhS-Ja-dUQ" id="GNv-Rg-bGr"/>
+                        <outlet property="awayTeamNameLabel" destination="WPg-W7-Es8" id="wwb-Lo-AGk"/>
                         <outlet property="ballHalfLabel" destination="cML-AN-LsV" id="Yfi-KR-XgM"/>
                         <outlet property="ballOnLabel" destination="C7S-UZ-HGO" id="Y3p-JZ-hKL"/>
                         <outlet property="changeTeamButton" destination="Ngw-lm-5mK" id="3Q9-0I-fwH"/>
                         <outlet property="downLabel" destination="MQy-kb-7fz" id="p2G-Vt-7lg"/>
                         <outlet property="homePossession" destination="Gib-Lr-mBE" id="5a9-OR-hta"/>
                         <outlet property="homeScoreLabel" destination="oo9-o3-kqO" id="dF9-FT-Is7"/>
+                        <outlet property="homeTeamNameLabel" destination="spl-d3-xlw" id="JgD-Ec-fSx"/>
                         <outlet property="kickButton" destination="pm3-kx-RzU" id="ASf-Z5-OJx"/>
                         <outlet property="passButton" destination="cHg-vP-XMx" id="OLs-gk-l0S"/>
                         <outlet property="playTimeLabel" destination="mOj-XS-lae" id="x5m-JR-4Op"/>
                         <outlet property="quarter" destination="ipe-3X-xyE" id="1JW-zI-7Jj"/>
                         <outlet property="quitButton" destination="eyw-dV-kXO" id="k2f-sy-JCm"/>
+                        <outlet property="resultLabel" destination="YbW-mm-jOF" id="2uq-hN-o3e"/>
                         <outlet property="runButton" destination="Rzw-Vy-Smc" id="lZe-h3-aDm"/>
                         <outlet property="timeOutButton" destination="HCp-bb-rOS" id="WxF-jv-Fbf"/>
                         <outlet property="timeRemainingLabel" destination="8Gd-wB-QDv" id="Wtq-S5-oI7"/>
@@ -364,6 +406,6 @@
         <image name="run" width="256" height="256"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="PB1-4i-zpP"/>
+        <segue reference="lAW-v6-YDJ"/>
     </inferredMetricsTieBreakers>
 </document>
