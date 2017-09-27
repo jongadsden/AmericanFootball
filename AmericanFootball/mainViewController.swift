@@ -48,6 +48,7 @@ class MainViewController: UIViewController {
     var awayTeamCity: String!
     var awayTeamName: String!
     var offencePlay: Int!
+    var offenceSubPlay: String!
     var defencePlay: Int!
     var timeUsed = 0
     var turnover = false
@@ -106,23 +107,41 @@ class MainViewController: UIViewController {
             // Human is offence
             switch (PlayType(rawValue: sender.tag)!) {
             case .run:
-                offencePlay = runPlay
+                let runController = UIAlertController()
+                runController.title = "Run Selection"
+                runController.message = "Select the type of run:"
+                
+                let insideAction = UIAlertAction(title: "Inside", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.runPlay, subPlayType: "inside") }
+                let outsideAction = UIAlertAction(title: "Outside", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "outside") }
+                
+                runController.addAction(insideAction)
+                runController.addAction(outsideAction)
+                self.present(runController, animated: true, completion: nil)
             case .pass:
-                offencePlay = passPlay
                 let passController = UIAlertController()
                 passController.title = "Pass Selection"
                 passController.message = "Select the type of pass:"
                 
-                let shortAction = UIAlertAction(title: "Short", style: UIAlertActionStyle.default) { action in self.passType = "short" }
-                let mediumAction = UIAlertAction(title: "Medium", style: UIAlertActionStyle.default) { action in self.passType = "medium" }
-                let longAction = UIAlertAction(title: "Long", style: UIAlertActionStyle.default) { action in self.passType = "long" }
+                let shortAction = UIAlertAction(title: "Short", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "short")
+                }
+                let mediumAction = UIAlertAction(title: "Medium", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "medium") }
+                let longAction = UIAlertAction(title: "Long", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "long") }
                 
                 passController.addAction(shortAction)
                 passController.addAction(mediumAction)
                 passController.addAction(longAction)
                 self.present(passController, animated: true, completion: nil)
             case .kick:
-                offencePlay = kickPlay
+                let kickController = UIAlertController()
+                kickController.title = "Kick Selection"
+                kickController.message = "Select the type of kick:"
+                
+                let fieldGoalAction = UIAlertAction(title: "Field Goal", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.kickPlay, subPlayType: "fieldGoal") }
+                let puntAction = UIAlertAction(title: "Punt", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.kickPlay, subPlayType: "punt") }
+                
+                kickController.addAction(fieldGoalAction)
+                kickController.addAction(puntAction)
+                self.present(kickController, animated: true, completion: nil)
             }
         } else {
             // Human is defence
@@ -134,32 +153,39 @@ class MainViewController: UIViewController {
             case .kick:
                 defencePlay = kickPlay
             }
+            executePlay(playType: defencePlay, subPlayType: "")
+        }
+    }
+    
+    // this is looking to replace nearly everything in PerformPlay
+    func executePlay(playType: Int, subPlayType: String) {
+        // Assume that home team is human team for now
+        if teamInPossession == 1 {
+            // Human is offence
+            offencePlay = playType
+            offenceSubPlay = subPlayType
+        } else {
+            // Human is defence
+            defencePlay = playType
         }
         
-        // Need to select opposition play
         selectComputerPlay()
         
-        // Execute the play based on the offensive selection
         switch offencePlay {
         case runPlay:
-            executeRun()
+            executeRun(runType: offenceSubPlay)
             playCompletion()
         case passPlay:
-            executePass(passType: passType)
+            executePass(passType: offenceSubPlay)
             playCompletion()
         case kickPlay:
-            let kickController = UIAlertController()
-            kickController.title = "Kick Selection"
-            kickController.message = "Select the type of kick:"
-            
-            let fieldGoalAction = UIAlertAction(title: "Field Goal", style: UIAlertActionStyle.default) { action in self.executeKick() }
-            let puntAction = UIAlertAction(title: "Punt", style: UIAlertActionStyle.default) { action in self.executePunt() }
-            
-            kickController.addAction(fieldGoalAction)
-            kickController.addAction(puntAction)
-            self.present(kickController, animated: true, completion: nil)
+            if offenceSubPlay == "fieldGoal" {
+                executeKick()
+            } else {
+                executePunt()
+            }
         default:
-            executeRun()
+            executeRun(runType: "")
             playCompletion()
             print("something went wrong and fell to default statement")
         }
@@ -206,14 +232,27 @@ class MainViewController: UIViewController {
             // Computer is attacking
             if currentDown == 4 {
                 offencePlay = kickPlay
+                if ballOn < 60 {
+                    offenceSubPlay = "punt"
+                } else {
+                    offenceSubPlay = "fieldGoal"
+                }
             } else {
                 // just randomise offence play
                 offencePlay = Int(arc4random_uniform(2)+1)
+                // need to select a sub play
+                if offencePlay == 2 {
+                    // always go short for now
+                    offenceSubPlay = "short"
+                } else {
+                    // always go inside for now
+                    offenceSubPlay = "inside"
+                }
             }
         }
     }
     
-    func executeRun() {
+    func executeRun(runType: String) {
         // for now a random gain up to 11 yards - weighted to centre by using 3 variables
         // first decide whether this is a big play - more than 10 yards (11% are)
         let randomOne = Int(arc4random_uniform(100))
