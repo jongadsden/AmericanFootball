@@ -16,7 +16,6 @@ var timeRemaining = 900
 var currentDown = 1
 var yardsToGo = 10
 var ballOn = 25
-var playTime = 45
 var yardsGained = 0
 
 class MainViewController: UIViewController {
@@ -45,8 +44,14 @@ class MainViewController: UIViewController {
 
     var homeTeamCity: String!
     var homeTeamName: String!
+    var homeTeamDefRating: Int!
+    var homeTeamOffRating: Int!
+    var homeTeamColour: UIColor!
     var awayTeamCity: String!
     var awayTeamName: String!
+    var awayTeamDefRating: Int!
+    var awayTeamOffRating: Int!
+    var awayTeamColour: UIColor!
     var offencePlay: Int!
     var offenceSubPlay: String!
     var defencePlay: Int!
@@ -55,12 +60,20 @@ class MainViewController: UIViewController {
     var resultText = ""
     var passType = ""
     var runType = ""
+    var yardsLost = 0
+    var incompleteChance = 0
+    var penaltyOnPlay = false
+    var outOfBounds = false
     
     // constants for play types
     let runPlay = 1
     let passPlay = 2
     let kickPlay = 3
 
+    // setup play clock with a Timer and counter
+    var timer = Timer()
+    var playTime = 40
+    
     // Big bug in here around 4th down plays that are not kicks
     // Both are going to be best fixed by a code reorganisation
     // Not outputting final result either
@@ -84,11 +97,19 @@ class MainViewController: UIViewController {
 
         currentDown = 1
         yardsToGo = 10
-        ballOn = 20
-        playTime = 45
+        ballOn = 25
+        playTime = 40
         homeTeamNameLabel.text = homeTeamCity + " " + homeTeamName
+        homeTeamNameLabel.textColor = homeTeamColour
         awayTeamNameLabel.text = awayTeamCity + " " + awayTeamName
+        awayTeamNameLabel.textColor = awayTeamColour
         eventLabel.text = " "
+        executeKickOff()
+        playCompletion()
+        refreshScoreboardAfterPlay()
+        
+        // start play clock
+        timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
     }
 
     override func didReceiveMemoryWarning() {
@@ -98,6 +119,7 @@ class MainViewController: UIViewController {
     
     @IBAction func performPlay(_ sender: UIButton) {
         // set result text to blank
+        penaltyOnPlay = false
         resultLabel.text = ""
         resultText = ""
         eventLabel.text = ""
@@ -112,7 +134,7 @@ class MainViewController: UIViewController {
                 runController.message = "Select the type of run:"
                 
                 let insideAction = UIAlertAction(title: "Inside", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.runPlay, subPlayType: "inside") }
-                let outsideAction = UIAlertAction(title: "Outside", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "outside") }
+                let outsideAction = UIAlertAction(title: "Outside", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.runPlay, subPlayType: "outside") }
                 
                 runController.addAction(insideAction)
                 runController.addAction(outsideAction)
@@ -122,8 +144,7 @@ class MainViewController: UIViewController {
                 passController.title = "Pass Selection"
                 passController.message = "Select the type of pass:"
                 
-                let shortAction = UIAlertAction(title: "Short", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "short")
-                }
+                let shortAction = UIAlertAction(title: "Short", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "short") }
                 let mediumAction = UIAlertAction(title: "Medium", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "medium") }
                 let longAction = UIAlertAction(title: "Long", style: UIAlertActionStyle.default) { action in self.executePlay(playType: self.passPlay, subPlayType: "long") }
                 
@@ -189,6 +210,18 @@ class MainViewController: UIViewController {
             playCompletion()
             print("something went wrong and fell to default statement")
         }
+        
+        // Display result as an alert too - need to find out how to position and colour this
+   //     let resultController = UIAlertController()
+     //   resultController.title = "Play Result"
+   //     resultController.message = resultLineOne
+        
+   //     let okAction = UIAlertAction(title: "Ok", style: UIAlertActionStyle.default)
+   //     resultController.addAction(okAction)
+   //     self.present(resultController, animated: true, completion: nil)
+   //     resultController.message = resultLineTwo
+   //     self.present(resultController, animated: true, completion: nil)
+        
         refreshScoreboardAfterPlay()
     }
     
@@ -216,7 +249,7 @@ class MainViewController: UIViewController {
             }
         }
         // Reset the play clock
-        playTimeLabel.text = "45"
+        playTimeLabel.text = "40"
     }
     
     func selectComputerPlay() {
@@ -259,11 +292,31 @@ class MainViewController: UIViewController {
         var bigPlayChance = 11
         var reduceGain = 3
         
+        // adjust chances of events happening based on type of run selected
+        switch runType {
+        case "inside":
+            bigPlayChance = 8
+            reduceGain = 2
+        case "outside":
+            bigPlayChance = 14
+            reduceGain = 4
+        default:
+            bigPlayChance = 12
+            reduceGain = 3
+        }
+        
         // if defence has gone run (1) then reduce chance of big play by half
         // also reduce yards gained by more yards
         if defencePlay == runPlay {
-            bigPlayChance = 6
-            reduceGain = 5
+            bigPlayChance = bigPlayChance.unsafeDivided(by: 2)
+            reduceGain += 2
+        }
+        
+        // check for pre-snap penalties and don't process anymore
+        checkPreSnapPenalty(PlayType: runPlay)
+        
+        if penaltyOnPlay == true {
+            return
         }
         
         if randomOne > bigPlayChance {
@@ -279,9 +332,8 @@ class MainViewController: UIViewController {
         }
 
         if yardsGained < 0 {
-            resultLabel.text = "\(yardsGained) yards lost"
-            resultText = "\(yardsGained) yards lost"
-
+            yardsLost = 0 - yardsGained
+            resultLabel.text = "He loses \(yardsLost) yards"
         } else {
             resultLabel.text = "\(yardsGained) yards gained"
             resultText = "\(yardsGained) yards gained"
@@ -313,24 +365,57 @@ class MainViewController: UIViewController {
         // see if there is a sack first - go for 4.5% for run or 8.5% for pass defence
         let sacked = Int(arc4random_uniform(200))
         // need interceptions - go for 2.5% chance overall
-        let intercepted = Int(arc4random_uniform(200))
+        let intercepted = Int(arc4random_uniform(2)) // set back to 200
         // 11% chance of a big play (>25 yards)
         let bigPlay = Int(arc4random_uniform(100))
+
+        // check for pre-snap penalties and don't process anymore
+        checkPreSnapPenalty(PlayType: passPlay)
+        
+        if penaltyOnPlay == true {
+            return
+        }
         
         // default chances of events
         var sackChance = 9
         var interceptChance = 3
         var bigChance = 5
-        var reduceGain = 1
         var increaseGain = 10
+        
+        switch passType {
+        case "short":
+            sackChance = 6
+            interceptChance = 2
+            bigChance = 2
+            increaseGain = -5
+            incompleteChance = 27
+        case "medium":
+            sackChance = 9
+            interceptChance = 3
+            bigChance = 5
+            increaseGain = 7
+            incompleteChance = 37
+        case "long":
+            sackChance = 12
+            interceptChance = 5
+            bigChance = 8
+            increaseGain = 15
+            incompleteChance = 50
+        default:
+            sackChance = 9
+            interceptChance = 3
+            bigChance = 5
+            increaseGain = 0
+            incompleteChance = 37
+        }
         
         // set up defence effects if defence is a pass
         if defencePlay == passPlay {
-            sackChance = 17
-            interceptChance = 7
-            bigChance = 17
-            reduceGain = 4
-            increaseGain = 2
+            sackChance += 6
+            interceptChance += 4
+            bigChance -= 2
+            increaseGain -= 5
+            incompleteChance += 7
         }
 
         if sacked < sackChance {
@@ -360,9 +445,10 @@ class MainViewController: UIViewController {
             let randomThree = Int(arc4random_uniform(6))
             yardsGained = randomOne + randomTwo + randomThree - 1
             resultLabel.text = "Pass intercepted - \(yardsGained) downfield"
-            ballOn += yardsGained
-            if ballOn > 99 {
-                ballOn = 80
+            yardsGained = 0 - yardsGained
+            if ballOn + yardsGained > 99 {
+                ballOn = 75
+                yardsGained = 0
                 resultLabel.text = resultLabel.text! + " - touchback"
             }
             timeUsed = 20
@@ -374,7 +460,7 @@ class MainViewController: UIViewController {
         // out of bounds needed
         // do pass completion first - for now 63% success
         let passCompletion = Int(arc4random_uniform(100))
-        if passCompletion > 63 {
+        if passCompletion > (100 - incompleteChance) {
             yardsGained = 0
             resultLabel.text = "Pass - Incomplete"
             resultText = "Pass - Incomplete"
@@ -386,7 +472,7 @@ class MainViewController: UIViewController {
                 let randomTwo = Int(arc4random_uniform(6))
                 let randomThree = Int(arc4random_uniform(6))
                 let randomFour = Int(arc4random_uniform(6))
-                yardsGained = randomOne + randomTwo + randomThree + randomFour - reduceGain
+                yardsGained = randomOne + randomTwo + randomThree + randomFour + increaseGain
             } else {
                 let randomOne = Int(arc4random_uniform(11))
                 let randomTwo = Int(arc4random_uniform(11))
@@ -402,7 +488,8 @@ class MainViewController: UIViewController {
                 resultText = " Pass Complete - no gain"
                 resultLabel.textColor = UIColor.black
             case -1:  // can get away with this as only negative can be -1, not very elegant
-                resultLabel.text = " Pass Complete - \(yardsGained) yards lost"
+                yardsLost = 0 - yardsGained
+                resultLabel.text = " Pass Complete - \(yardsLost) yards lost"
                 resultText = " Pass Complete - \(yardsGained) yards lost"
                 resultLabel.textColor = UIColor.black
             default:
@@ -472,7 +559,7 @@ class MainViewController: UIViewController {
             currentDown = 1
             yardsToGo = 10
             switchPossession()
-            ballOn = 20
+            ballOn = 25
             resultLabel.text = "The punt went through the endzone - touchback"
             updateClock(secondsUsed: 20)
             return
@@ -525,7 +612,7 @@ class MainViewController: UIViewController {
             currentDown = 0
             yardsToGo = 10
             switchPossession()
-            ballOn = 20
+            ballOn = 25
             eventLabel.text = "The kick off went through the endzone - touchback"
             updateClock(secondsUsed: 10)
             return
@@ -607,7 +694,9 @@ class MainViewController: UIViewController {
             }
         }
         else {
-            currentDown += 1
+            if penaltyOnPlay == false {
+                currentDown += 1
+            }
         }
         
         if turnover == true {
@@ -667,7 +756,19 @@ class MainViewController: UIViewController {
     }
     
     func updateClock(secondsUsed: Int) {
-        timeRemaining -= secondsUsed
+        // check for two minute warning
+        if currentQuarter == 2 || currentQuarter == 4 {
+            if timeRemaining > 120 && timeRemaining - secondsUsed <= 120 {
+                timeRemaining = 120
+                eventLabel.text = "Two Minute Warning"
+            } else {
+                timeRemaining -= secondsUsed
+            }
+                
+        } else {
+            timeRemaining -= secondsUsed
+        }
+        
         if timeRemaining < 0 {
             timeRemaining = 900
             timeRemainingLabel.text = "15:00"
@@ -681,6 +782,7 @@ class MainViewController: UIViewController {
                 currentDown = 1
                 yardsToGo = 10
                 eventLabel.text = "HALF TIME"
+                executeKickOff()
             }
             if currentQuarter == 5 {
                 if homeScore > awayScore {
@@ -706,7 +808,216 @@ class MainViewController: UIViewController {
         } else {
             timeRemainingLabel.text = "\(minutesLeft):\(secondsLeft)"
         }
-
+        // reset play clock
+        playTime = 40
+    }
+    
+    func checkPreSnapPenalty(PlayType: Int) {
+        // check for a penalty first
+        let randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < 8 {
+            penaltyOnPlay = true
+            
+            switch randomNumber {
+            case 0, 1, 2, 3:
+                yardsGained = -5
+                resultLabel.text = "False Start - Offense Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+            case 4:
+                yardsGained = 5
+                resultLabel.text = "Neutral Zone Infraction - Defense Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+            case 5:
+                yardsGained = -5
+                resultLabel.text = "Illegal Formation - Offensive Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+            default:
+                yardsGained = 5
+                resultLabel.text = "Offside - Defensive Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+            }
+        }
+    }
+    
+    func checkPostPlayPenalty(PlayType: Int) {
+        let offensiveHoldingChance = 5
+        let defensiveHoldingChance = 2
+        let illegalBlockChance = 1
+        let faceMaskChance = 1
+        let handsChance = 1
+        let unsportsmanChance = 1
+        let twelveChance = 1
+        let unnecessaryRoughChance = 2
+        
+        var randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < offensiveHoldingChance {
+            yardsGained = -10
+            resultLabel.text = "Holding - Offense Penalty - 5 yards"
+            resultLabel.textColor = UIColor.yellow
+            penaltyOnPlay = true
+            return
+        }
+        
+        randomNumber = Int(arc4random_uniform(200))  // change to 200
+        
+        if randomNumber < defensiveHoldingChance {
+            yardsGained = 5
+            resultLabel.text = "Holding - Defense Penalty - 5 yards"
+            resultLabel.textColor = UIColor.yellow
+            penaltyOnPlay = true
+            return
+        }
+        
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < illegalBlockChance {
+            if Int(arc4random_uniform(2)) == 1 {
+                yardsGained = -5
+                resultLabel.text = "Illegal Block - Offensive Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            } else {
+                yardsGained = 5
+                resultLabel.text = "Illegal Block - Defensive Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            }
+        }
+        
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < faceMaskChance {
+            if Int(arc4random_uniform(2)) == 1 {
+                yardsGained = -15
+                resultLabel.text = "Facemask - Offensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            } else {
+                yardsGained = 15
+                resultLabel.text = "Facemask - Defensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            }
+        }
+        
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < handsChance {
+            if Int(arc4random_uniform(2)) == 1 {
+                yardsGained = -10
+                resultLabel.text = "Illegal Use of Hands - Offensive Penalty - 10 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            } else {
+                yardsGained = 5
+                resultLabel.text = "Illegal Use of Hands - Defensive Penalty - 5 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            }
+        }
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < unsportsmanChance {
+            if Int(arc4random_uniform(2)) == 1 {
+                yardsGained = -15
+                resultLabel.text = "Unsportsmanlike Conduct - Offensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            } else {
+                yardsGained = 15
+                resultLabel.text = "Unsportsmanlike Conduct - Defensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            }
+        }
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < twelveChance {
+            yardsGained = 5
+            resultLabel.text = "Twelve People on the Field - Defensive Penalty - 5 yards"
+            resultLabel.textColor = UIColor.yellow
+            penaltyOnPlay = true
+            return
+        }
+        randomNumber = Int(arc4random_uniform(200))
+        
+        if randomNumber < unnecessaryRoughChance {
+            if Int(arc4random_uniform(2)) == 1 {
+                yardsGained = -15
+                resultLabel.text = "Unnecessary Roughness - Offensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            } else {
+                yardsGained = 15
+                resultLabel.text = "Unnecessary Roughness - Defensive Penalty - 15 yards"
+                resultLabel.textColor = UIColor.yellow
+                penaltyOnPlay = true
+                return
+            }
+        }
+        
+        // finally a couple of passing play only
+        if PlayType == passPlay {
+            let passInterfenceChance = 3
+            randomNumber = Int(arc4random_uniform(200))
+            
+            if randomNumber < passInterfenceChance {
+                if Int(arc4random_uniform(4)) == 1 {
+                    yardsGained = -10
+                    resultLabel.text = "Pass Interference - Offensive Penalty - 10 yards"
+                    resultLabel.textColor = UIColor.yellow
+                    penaltyOnPlay = true
+                    return
+                } else {
+                    yardsGained = 15  // needs length of pass here
+                    resultLabel.text = "Pass Interference - Defensive Penalty - 15 yards"
+                    resultLabel.textColor = UIColor.yellow
+                    penaltyOnPlay = true
+                    return
+                }
+            }
+            
+            let roughPasserChance = 1
+            randomNumber = Int(arc4random_uniform(200))
+            
+            if randomNumber < roughPasserChance {
+                    yardsGained = 15
+                    resultLabel.text = "Roughing the Passer - Defensive Penalty - 15 yards"
+                    resultLabel.textColor = UIColor.yellow
+                    penaltyOnPlay = true
+            }
+        }
+    }
+    
+    @objc func updateTimer() {
+        playTime -= 1
+        playTimeLabel.text = String(playTime)
+        if playTime > 9 {
+            playTimeLabel.textColor = UIColor.black
+        } else {
+            playTimeLabel.textColor = UIColor.red
+        }
+        if playTime == 0 {
+            // delay of game
+            resultLabel.textColor = UIColor.yellow
+            resultLabel.text = "Delay of Game - 5 yards"
+            yardsGained = -5
+            penaltyOnPlay = true
+            playCompletion()
+            refreshScoreboardAfterPlay()
+        }
     }
 }
 
